@@ -38,7 +38,16 @@ def explore_city_data(city_data):
     # Calculate median?
     # Calculate standard deviation?
 
-
+    print "Data Size:", len(housing_prices)
+    print "Number of features:", n_features
+    print "Min value:", np.min(housing_prices)
+    print "Max value:", np.max(housing_prices)
+    print "Mean:", np.mean(housing_prices)
+    print "Median:", np.median(housing_prices)
+    print "Standard deviation:", np.std(housing_prices)
+    
+from sklearn.metrics import make_scorer
+from sklearn import metrics
 def performance_metric(label, prediction):
     """Calculate and return the appropriate performance metric."""
 
@@ -46,19 +55,15 @@ def performance_metric(label, prediction):
     ### Step 2. YOUR CODE GOES HERE ###
     ###################################
 
-    # http://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics
-    pass
-
+    MSE = metrics.mean_squared_error(label,prediction)
+    return MSE
 
 def split_data(city_data):
     """Randomly shuffle the sample set. Divide it into training and testing set."""
 
     # Get the features and labels from the Boston housing data
     X, y = city_data.data, city_data.target
-
-    ###################################
-    ### Step 3. YOUR CODE GOES HERE ###
-    ###################################
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, random_state=0)
 
     return X_train, y_train, X_test, y_test
 
@@ -153,16 +158,14 @@ def fit_predict_model(city_data):
 
     parameters = {'max_depth':(1,2,3,4,5,6,7,8,9,10)}
 
-    ###################################
-    ### Step 4. YOUR CODE GOES HERE ###
-    ###################################
-
     # 1. Find the best performance metric
     # should be the same as your performance_metric procedure
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html
 
+    sco = make_scorer(performance_metric)
     # 2. Use gridearch to fine tune the Decision Tree Regressor and find the best model
     # http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn.grid_search.GridSearchCV
+    reg = regressor.GridSearch(regressor, parameters, scoring = sco)
 
     # Fit the learner to the training data
     print "Final Model: "
