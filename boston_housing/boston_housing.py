@@ -5,10 +5,11 @@ import numpy as np
 import pylab as pl
 from sklearn import datasets
 from sklearn.tree import DecisionTreeRegressor
-
-################################
-### ADD EXTRA LIBRARIES HERE ###
-################################
+from sklearn.metrics import make_scorer,mean_squared_error
+from sklearn import metrics
+from sklearn import cross_validation
+from sklearn import grid_search
+from sklearn.grid_search import GridSearchCV
 
 
 def load_data():
@@ -17,17 +18,11 @@ def load_data():
     boston = datasets.load_boston()
     return boston
 
-
 def explore_city_data(city_data):
-    """Calculate the Boston housing statistics."""
-
-    # Get the labels and features from the housing data
     housing_prices = city_data.target
     housing_features = city_data.data
 
-    ###################################
-    ### Step 1. YOUR CODE GOES HERE ###
-    ###################################
+    n_samples, n_features = np.shape(housing_features)
 
     # Please calculate the following values using the Numpy library
     # Size of data?
@@ -37,7 +32,7 @@ def explore_city_data(city_data):
     # Calculate mean?
     # Calculate median?
     # Calculate standard deviation?
-
+    # Size of data
     print "Data Size:", len(housing_prices)
     print "Number of features:", n_features
     print "Min value:", np.min(housing_prices)
@@ -45,16 +40,9 @@ def explore_city_data(city_data):
     print "Mean:", np.mean(housing_prices)
     print "Median:", np.median(housing_prices)
     print "Standard deviation:", np.std(housing_prices)
-    
-from sklearn.metrics import make_scorer
-from sklearn import metrics
+
+
 def performance_metric(label, prediction):
-    """Calculate and return the appropriate performance metric."""
-
-    ###################################
-    ### Step 2. YOUR CODE GOES HERE ###
-    ###################################
-
     MSE = metrics.mean_squared_error(label,prediction)
     return MSE
 
@@ -63,7 +51,7 @@ def split_data(city_data):
 
     # Get the features and labels from the Boston housing data
     X, y = city_data.data, city_data.target
-    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, random_state=0)
+    X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y,test_size=0.4, random_state=42)
 
     return X_train, y_train, X_test, y_test
 
@@ -82,9 +70,12 @@ def learning_curve(depth, X_train, y_train, X_test, y_test):
     for i, s in enumerate(sizes):
 
         # Create and fit the decision tree regressor model
-        regressor = DecisionTreeRegressor(max_depth=depth)
+        regressor = DecisionTreeRegressor(max_depth = depth)
         regressor.fit(X_train[:s], y_train[:s])
 
+
+        
+        ###
         # Find the performance on the training and testing set
         train_err[i] = performance_metric(y_train[:s], regressor.predict(X_train[:s]))
         test_err[i] = performance_metric(y_test, regressor.predict(X_test))
@@ -155,19 +146,23 @@ def fit_predict_model(city_data):
 
     # Setup a Decision Tree Regressor
     regressor = DecisionTreeRegressor()
-
     parameters = {'max_depth':(1,2,3,4,5,6,7,8,9,10)}
 
     # 1. Find the best performance metric
     # should be the same as your performance_metric procedure
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html
 
-    sco = make_scorer(performance_metric)
+    sco = make_scorer(performance_metric, greater_is_better=False)
     # 2. Use gridearch to fine tune the Decision Tree Regressor and find the best model
     # http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn.grid_search.GridSearchCV
-    reg = regressor.GridSearch(regressor, parameters, scoring = sco)
-
+    
+    grid_search = GridSearchCV(regressor, parameters, scoring = sco)
+    grid_search.fit(X,y)
+    
+    reg = grid_search
+        
     # Fit the learner to the training data
+    #score_func(y, y_pred, **kwargs)
     print "Final Model: "
     print reg.fit(X, y)
     
@@ -176,7 +171,9 @@ def fit_predict_model(city_data):
     y = reg.predict(x)
     print "House: " + str(x)
     print "Prediction: " + str(y)
-
+    print "Best model parameter:  " + str(reg.best_params_)
+    print "Best parameters: "
+    print reg.best_params_
 
 def main():
     """Analyze the Boston housing data. Evaluate and validate the
@@ -203,6 +200,6 @@ def main():
     # Tune and predict Model
     fit_predict_model(city_data)
 
-
 if __name__ == "__main__":
     main()
+    
